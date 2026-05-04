@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DROPZONE — Login / Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0a0a0a; --bg2: #111; --bg3: #1a1a1a;
+      --accent: #c8f135; --accent2: #ff3c3c;
+      --text: #f0f0f0; --muted: #888; --border: #2a2a2a; --card: #141414;
+    }
+    :root[data-theme="light"] {
+      --bg: #f5f5f0; --bg2: #ffffff; --bg3: #ebebeb;
+      --accent: #7ab800; --accent2: #ff3c3c;
+      --text: #111111; --muted: #666; --border: #ddd; --card: #ffffff;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh; display: flex;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 45%; background: var(--accent);
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem; position: relative; overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .panel-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 4px; color: #000;
+      position: relative; z-index: 1;
+      text-decoration: none;
+    }
+
+    .panel-main { position: relative; z-index: 1; }
+
+    .panel-main h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 6vw, 6rem);
+      color: #000; line-height: 0.9;
+      letter-spacing: 2px; margin-bottom: 1.5rem;
+    }
+
+    .panel-main p { color: rgba(0,0,0,0.65); font-size: 1rem; line-height: 1.7; max-width: 320px; }
+
+    .panel-perks { position: relative; z-index: 1; }
+
+    .perk {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .perk-icon {
+      width: 32px; height: 32px; background: rgba(0,0,0,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0;
+    }
+    .perk-text { font-size: 0.85rem; color: rgba(0,0,0,0.7); font-weight: 500; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 3rem 2rem; position: relative;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); width: 40px; height: 40px;
+      border-radius: 50%; cursor: pointer; font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    .auth-box { width: 100%; max-width: 420px; }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex; margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-tab {
+      flex: 1; background: none; border: none;
+      color: var(--muted); padding: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Forms */
+    .auth-form { display: none; animation: fadeUp 0.4s ease; }
+    .auth-form.active { display: block; }
+
+    .form-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+    .form-subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 2rem; }
+
+    .form-group { margin-bottom: 1.25rem; }
+
+    .form-label {
+      display: block; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%; background: var(--bg3);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.85rem 1rem; font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .password-wrap { position: relative; }
+    .password-toggle {
+      position: absolute; right: 1rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1rem; padding: 0;
+    }
+
+    .form-error {
+      font-size: 0.75rem; color: var(--accent2);
+      margin-top: 0.4rem; display: none;
+    }
+    .form-error.show { display: block; }
+
+    .submit-btn {
+      width: 100%; background: var(--accent); color: #000;
+      border: none; padding: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .submit-btn:hover { background: var(--text); color: var(--bg); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.5rem 0; color: var(--muted); font-size: 0.75rem;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .social-btn {
+      width: 100%; background: var(--bg3);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.85rem; font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; display: flex; align-items: center;
+      justify-content: center; gap: 0.75rem;
+    }
+    .social-btn:hover { border-color: var(--accent); }
+
+    .success-box {
+      display: none; text-align: center; padding: 2rem;
+      animation: fadeUp 0.4s ease;
+    }
+    .success-box.show { display: block; }
+    .success-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .success-box h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 2px; margin-bottom: 0.5rem;
+    }
+    .success-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    .back-link {
+      display: block; text-align: center; margin-top: 1.5rem;
+      color: var(--muted); font-size: 0.8rem; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .back-link span { color: var(--accent); font-weight: 600; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .left-panel {
+        width: 100%; min-height: auto; padding: 2rem;
+        flex-direction: row; align-items: center; gap: 1rem;
+      }
+      .panel-main h2 { font-size: 2.5rem; }
+      .panel-main p, .panel-perks { display: none; }
+      .right-panel { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <a class="panel-logo" href="index.html">DROPZONE</a>
+    <div class="panel-main">
+      <h2>YOUR<br>NEXT<br>DROP<br>AWAITS.</h2>
+      <p>Create an account and get access to exclusive drops, order tracking, and personalized recommendations.</p>
+    </div>
+    <div class="panel-perks">
+      <div class="perk">
+        <div class="perk-icon"><i class="ph-fill ph-fire"></i></div>
+        <div class="perk-text">Early access to new drops</div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon"><i class="ph-fill ph-package"></i></div>
+        <div class="perk-text">Real-time order tracking</div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon"><i class="ph-fill ph-cpu"></i></div>
+        <div class="perk-text">AI-powered recommendations</div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon"><i class="ph-fill ph-credit-card"></i></div>
+        <div class="perk-text">Saved payment methods</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="ph ph-moon"></i></button>
+
+    <div class="auth-box">
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+        <button class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form active" id="loginForm">
+        <div class="form-title">WELCOME<br>BACK.</div>
+        <div class="form-subtitle">Sign in to your DROPZONE account</div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="you@email.com"/>
+          <div class="form-error" id="loginEmailError">Please enter a valid email</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="loginPassword" placeholder="Your password"/>
+            <button class="password-toggle" onclick="togglePassword('loginPassword', this)"><i class="ph ph-eye"></i></button>
+          </div>
+          <div class="form-error" id="loginPasswordError">Password is required</div>
+        </div>
+
+        <button class="submit-btn" id="loginBtn" onclick="handleLogin()">Sign In →</button>
+
+        <div class="divider">or continue with</div>
+        <button class="social-btn" onclick="handleGoogleLogin()">
+          <i class="ph ph-google-logo"></i> Continue with Google
+        </button>
+
+        <a href="#" class="back-link" onclick="switchTab('register')">
+          No account? <span>Create one →</span>
+        </a>
+
+        <!-- Success state -->
+        <div class="success-box" id="loginSuccess">
+          <div class="success-icon" style="color: var(--accent)"><i class="ph ph-confetti" style="font-size: 4rem;"></i></div>
+          <h3>YOU'RE IN!</h3>
+          <p>Welcome back! Redirecting you to the store...</p>
+          <button class="submit-btn" onclick="window.location.href='index.html'">Go to Store →</button>
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form" id="registerForm">
+        <div class="form-title">CREATE<br>ACCOUNT.</div>
+        <div class="form-subtitle">Join DROPZONE — it's free</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-input" id="regFirstName" placeholder="David"/>
+            <div class="form-error" id="regFirstNameError">Required</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-input" id="regLastName" placeholder="Smith"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="regEmail" placeholder="you@email.com"/>
+          <div class="form-error" id="regEmailError">Please enter a valid email</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="regPassword" placeholder="Min. 8 characters" oninput="checkPasswordStrength(this.value)"/>
+            <button class="password-toggle" onclick="togglePassword('regPassword', this)"><i class="ph ph-eye"></i></button>
+          </div>
+          <div class="form-error" id="regPasswordError">Password must be at least 8 characters</div>
+          <div id="passwordStrength" style="margin-top:0.5rem; font-size:0.75rem; color: var(--muted);"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="password-wrap">
+            <input type="password" class="form-input" id="regConfirm" placeholder="Repeat password"/>
+          </div>
+          <div class="form-error" id="regConfirmError">Passwords do not match</div>
+        </div>
+
+        <button class="submit-btn" id="registerBtn" onclick="handleRegister()">Create Account →</button>
+
+        <a href="#" class="back-link" onclick="switchTab('login')">
+          Already have an account? <span>Sign in →</span>
+        </a>
+
+        <!-- Success state -->
+        <div class="success-box" id="registerSuccess">
+          <div class="success-icon" style="color: var(--accent)"><i class="ph ph-check-circle" style="font-size: 4rem;"></i></div>
+          <h3>ACCOUNT<br>CREATED!</h3>
+          <p>Your account is ready. Please sign in to continue.</p>
+          <button class="submit-btn" onclick="switchTab('login')">Sign In →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── THEME ──
+    const savedTheme = localStorage.getItem('dropzone_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon();
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dropzone_theme', next);
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const theme = document.documentElement.getAttribute('data-theme');
+      document.querySelector('.theme-toggle').innerHTML = theme === 'dark' ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+    }
+
+    // ── TABS ──
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+    }
+
+    // ── PASSWORD TOGGLE ──
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.innerHTML = input.type === 'password' ? '<i class="ph ph-eye"></i>' : '<i class="ph ph-eye-closed"></i>';
+    }
+
+    // ── PASSWORD STRENGTH ──
+    function checkPasswordStrength(password) {
+      const el = document.getElementById('passwordStrength');
+      if (!password) { el.textContent = ''; return; }
+
+      let strength = 0;
+      if (password.length >= 8) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      const labels = ['Weak 🔴', 'Fair 🟡', 'Good 🟢', 'Strong 💪'];
+      el.textContent = `Strength: ${labels[strength - 1] || 'Too short 🔴'}`;
+    }
+
+    // ── VALIDATION HELPERS ──
+    function showError(id, show) {
+      document.getElementById(id).classList.toggle('show', show);
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // ── LOGIN ──
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      showError('loginEmailError', !isValidEmail(email));
+      showError('loginPasswordError', !password);
+      if (!isValidEmail(email) || !password) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.textContent = 'Signing in...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('dropzone_current_user', JSON.stringify(data.user));
+          localStorage.setItem('dropzone_token', data.token);
+          document.getElementById('loginSuccess').classList.add('show');
+          document.querySelectorAll('#loginForm > *:not(.success-box)').forEach(el => {
+            if (!el.classList.contains('success-box')) el.style.display = 'none';
+          });
+        } else {
+          showError('loginPasswordError', true);
+          document.getElementById('loginPasswordError').textContent = data.error || 'Invalid email or password';
+          btn.textContent = 'Sign In →';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showError('loginPasswordError', true);
+        document.getElementById('loginPasswordError').textContent = 'Connection error. Is the server running?';
+        btn.textContent = 'Sign In →';
+        btn.disabled = false;
+      }
+    }
+
+    // ── REGISTER ──
+    async function handleRegister() {
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirm = document.getElementById('regConfirm').value;
+
+      showError('regFirstNameError', !firstName);
+      showError('regEmailError', !isValidEmail(email));
+      showError('regPasswordError', password.length < 8);
+      showError('regConfirmError', password !== confirm);
+
+      if (!firstName || !isValidEmail(email) || password.length < 8 || password !== confirm) return;
+
+      const btn = document.getElementById('registerBtn');
+      btn.textContent = 'Creating account...';
+      btn.disabled = true;
+
+      try {
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: fullName, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Show success, do NOT auto-login
+          document.querySelectorAll('#registerForm > *:not(.success-box)').forEach(el => {
+            el.style.display = 'none';
+          });
+          document.getElementById('registerSuccess').classList.add('show');
+        } else {
+          showError('regEmailError', true);
+          document.getElementById('regEmailError').textContent = data.error || 'Registration failed';
+          btn.textContent = 'Create Account →';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showError('regEmailError', true);
+        document.getElementById('regEmailError').textContent = 'Connection error. Is the server running?';
+        btn.textContent = 'Create Account →';
+        btn.disabled = false;
+      }
+    }
+
+    // ── GOOGLE (SIMULATED) ──
+    function handleGoogleLogin() {
+      alert('Google login would be implemented with Google OAuth in production!');
+    }
+
+    // ── ENTER KEY ──
+    document.addEventListener('keypress', (e) => {
+      if (e.key !== 'Enter') return;
+      const loginActive = document.getElementById('loginForm').classList.contains('active');
+      if (loginActive) handleLogin();
+      else handleRegister();
+    });
+  </script>
+</body>
+</html>

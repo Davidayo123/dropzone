@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DROPZONE — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0a0a0a; --bg2: #111; --bg3: #1a1a1a;
+      --accent: #c8f135; --accent2: #ff3c3c; --accent3: #3cf0ff;
+      --text: #f0f0f0; --muted: #888; --border: #2a2a2a; --card: #141414;
+    }
+    :root[data-theme="light"] {
+      --bg: #f5f5f0; --bg2: #ffffff; --bg3: #ebebeb;
+      --accent: #7ab800; --accent2: #ff3c3c; --accent3: #0099bb;
+      --text: #111111; --muted: #666; --border: #ddd; --card: #ffffff;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh; display: flex;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px; background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100; transition: transform 0.3s;
+    }
+
+    .sidebar-logo {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo a {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; letter-spacing: 3px;
+      color: var(--accent); text-decoration: none;
+    }
+    .sidebar-logo span {
+      display: block; font-size: 0.65rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-top: 0.25rem;
+    }
+
+    .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+
+    .nav-section-label {
+      font-size: 0.6rem; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--muted);
+      padding: 0.5rem 1.5rem; margin-top: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1.5rem; cursor: pointer;
+      color: var(--muted); font-size: 0.875rem; font-weight: 500;
+      border-left: 2px solid transparent;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .nav-item:hover { color: var(--text); background: var(--bg3); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--bg3); }
+    .nav-item .icon { font-size: 1rem; width: 20px; }
+
+    .sidebar-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .user-avatar {
+      width: 36px; height: 36px; background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; color: #000; flex-shrink: 0;
+    }
+    .user-name { font-size: 0.85rem; font-weight: 600; }
+    .user-role { font-size: 0.7rem; color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: 240px; flex: 1;
+      display: flex; flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem; letter-spacing: 2px;
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+    .topbar-btn {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 0.5rem 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+    }
+    .topbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .topbar-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+    .topbar-btn.primary:hover { background: var(--text); }
+
+    /* ── CONTENT ── */
+    .content { padding: 2rem; flex: 1; }
+
+    /* ── METRIC CARDS ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem; margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.5rem; position: relative; overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .metric-card::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 3px;
+      background: var(--accent);
+    }
+
+    .metric-card.red::after { background: var(--accent2); }
+    .metric-card.blue::after { background: var(--accent3); }
+    .metric-card.yellow::after { background: #f5a623; }
+
+    .metric-label {
+      font-size: 0.7rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .metric-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 2px;
+      line-height: 1; margin-bottom: 0.5rem;
+    }
+
+    .metric-change {
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .metric-change.up { color: var(--accent); }
+    .metric-change.down { color: var(--accent2); }
+
+    .metric-icon {
+      position: absolute; top: 1rem; right: 1rem;
+      font-size: 2rem; opacity: 0.15;
+    }
+
+    /* ── CHARTS GRID ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.25rem; margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.5rem;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    .chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+      font-weight: 700; font-size: 0.9rem;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    .chart-subtitle { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .chart-period {
+      display: flex; gap: 0.5rem;
+    }
+    .period-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); padding: 0.3rem 0.6rem;
+      font-size: 0.7rem; cursor: pointer; transition: all 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .period-btn.active, .period-btn:hover {
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    .chart-container { position: relative; height: 280px; }
+
+    /* ── TABLES GRID ── */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .table-card {
+      background: var(--card); border: 1px solid var(--border);
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+
+    .table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .table-title { font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; }
+
+    .view-all {
+      font-size: 0.75rem; color: var(--accent);
+      cursor: pointer; text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 0.75rem 1.5rem;
+      text-align: left; font-size: 0.65rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    td {
+      padding: 0.9rem 1.5rem;
+      font-size: 0.85rem; border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .status-badge.confirmed { background: rgba(200,241,53,0.15); color: var(--accent); }
+    .status-badge.pending { background: rgba(245,166,35,0.15); color: #f5a623; }
+    .status-badge.shipped { background: rgba(60,240,255,0.15); color: var(--accent3); }
+
+    /* ── PRODUCT MANAGER ── */
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+
+    .add-product-form {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+    .form-group label {
+      display: block; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.4rem;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%; background: var(--bg3);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.7rem 0.9rem; font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem; outline: none; transition: border 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+    .products-table-wrap { background: var(--card); border: 1px solid var(--border); }
+
+    .delete-btn {
+      background: none; border: none; color: var(--accent2);
+      cursor: pointer; font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; padding: 0.3rem 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(15px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .tables-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .content { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html">DROPZONE</a>
+      <span>Admin Dashboard</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item active" onclick="showSection('dashboard', this)">
+        <span class="icon"><i class="ph ph-chart-pie"></i></span> Dashboard
+      </a>
+      <a class="nav-item" onclick="showSection('analytics', this)">
+        <span class="icon"><i class="ph ph-chart-line"></i></span> Analytics
+      </a>
+
+      <div class="nav-section-label">Manage</div>
+      <a class="nav-item" onclick="showSection('products', this)">
+        <span class="icon"><i class="ph ph-package"></i></span> Products
+      </a>
+      <a class="nav-item" onclick="showSection('orders', this)">
+        <span class="icon"><i class="ph ph-shopping-cart"></i></span> Orders
+      </a>
+      <a class="nav-item" onclick="showSection('customers', this)">
+        <span class="icon"><i class="ph ph-users"></i></span> Customers
+      </a>
+
+      <div class="nav-section-label">Settings</div>
+      <a class="nav-item" href="index.html">
+        <span class="icon"><i class="ph ph-storefront"></i></span> View Store
+      </a>
+      <a class="nav-item" href="auth.html">
+        <span class="icon"><i class="ph ph-lock-key"></i></span> Auth Page
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">DA</div>
+        <div>
+          <div class="user-name">David Admin</div>
+          <div class="user-role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="topbar-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none" id="menuBtn">☰</button>
+        <div class="page-title" id="pageTitle">DASHBOARD</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="adminThemeBtn" onclick="toggleTheme()"><i class="ph ph-moon"></i></button>
+        <button class="topbar-btn primary" onclick="showSection('products', null)">+ Add Product</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD SECTION ── -->
+      <div class="section-view active" id="dashboardSection">
+
+        <!-- Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="ph ph-currency-dollar"></i></div>
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value">$48,295</div>
+            <div class="metric-change up">↑ 12.5% this month</div>
+          </div>
+          <div class="metric-card red">
+            <div class="metric-icon"><i class="ph ph-shopping-cart"></i></div>
+            <div class="metric-label">Total Orders</div>
+            <div class="metric-value">1,284</div>
+            <div class="metric-change up">↑ 8.2% this month</div>
+          </div>
+          <div class="metric-card blue">
+            <div class="metric-icon"><i class="ph ph-users"></i></div>
+            <div class="metric-label">Customers</div>
+            <div class="metric-value">3,942</div>
+            <div class="metric-change up">↑ 22.1% this month</div>
+          </div>
+          <div class="metric-card yellow">
+            <div class="metric-icon"><i class="ph ph-package"></i></div>
+            <div class="metric-label">Products</div>
+            <div class="metric-value" id="productCountMetric">24</div>
+            <div class="metric-change up">↑ Active</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Revenue Overview</div>
+                <div class="chart-subtitle">Monthly revenue for 2026</div>
+              </div>
+              <div class="chart-period">
+                <button class="period-btn active">6M</button>
+                <button class="period-btn">1Y</button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Sales by Category</div>
+                <div class="chart-subtitle">Current period</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tables -->
+        <div class="tables-grid">
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-title">Recent Orders</div>
+              <a class="view-all" onclick="showSection('orders', null)">View All →</a>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-card">
+            <div class="chart-header" style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border)">
+              <div class="table-title">Top Products</div>
+            </div>
+            <div class="chart-container" style="height:250px; padding:1rem;">
+              <canvas id="topProductsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── ANALYTICS SECTION ── -->
+      <div class="section-view" id="analyticsSection">
+        <div class="charts-grid" style="grid-template-columns:1fr 1fr; margin-bottom:1.5rem">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Daily Orders</div>
+                <div class="chart-subtitle">Last 7 days</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="dailyOrdersChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Traffic Sources</div>
+                <div class="chart-subtitle">Where customers come from</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="trafficChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRODUCTS SECTION ── -->
+      <div class="section-view" id="productsSection">
+        <div class="add-product-form">
+          <div style="font-weight:700; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:1rem;">Add New Product</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Product Name</label>
+              <input type="text" id="newName" placeholder="e.g. Gaming Headset Pro"/>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="newCategory">
+                <option value="Tech">Tech</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Gaming">Gaming</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Price ($)</label>
+              <input type="number" id="newPrice" placeholder="99"/>
+            </div>
+            <div class="form-group">
+              <label>Icon Class</label>
+              <input type="text" id="newEmoji" placeholder="ph-package" maxlength="50"/>
+            </div>
+            <div class="form-group">
+              <label>Badge</label>
+              <select id="newBadge">
+                <option value="">None</option>
+                <option value="new">New</option>
+                <option value="sale">Sale</option>
+              </select>
+            </div>
+            <div class="form-group" style="display:flex; align-items:flex-end;">
+              <button class="topbar-btn primary" style="width:100%; padding:0.7rem;" onclick="addProduct()">
+                + Add Product
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="products-table-wrap">
+          <div class="table-header">
+            <div class="table-title">All Products</div>
+            <div style="font-size:0.75rem; color:var(--muted);" id="productTableCount">Loading...</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Badge</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── ORDERS SECTION ── -->
+      <div class="section-view" id="ordersSection">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">All Orders</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="allOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CUSTOMERS SECTION ── -->
+      <div class="section-view" id="customersSection">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">All Customers</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Orders</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // ── ADMIN AUTH GUARD ──
+    (function() {
+      const user = JSON.parse(localStorage.getItem('dropzone_current_user') || 'null');
+      if (!user || user.role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+      }
+      // Update sidebar with actual admin name
+      const nameEl = document.querySelector('.user-name');
+      const avatarEl = document.querySelector('.user-avatar');
+      if (nameEl) nameEl.textContent = user.name;
+      if (avatarEl) avatarEl.textContent = user.name.substring(0, 2).toUpperCase();
+    })();
+
+    // ── THEME ──
+    const savedTheme = localStorage.getItem('dropzone_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dropzone_theme', next);
+      document.getElementById('adminThemeBtn').innerHTML = next === 'dark' ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+      setTimeout(initCharts, 100);
+    }
+
+    // ── NAVIGATION ──
+    function showSection(name, navEl) {
+      document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+      document.getElementById(`${name}Section`).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (navEl) navEl.classList.add('active');
+      document.getElementById('pageTitle').textContent = name.toUpperCase();
+      if (name === 'products') renderProductsTable();
+      if (name === 'orders') renderOrdersTable();
+      if (name === 'customers') renderCustomersTable();
+    }
+
+    // ── PRODUCT DATA ──
+    let adminProducts = JSON.parse(localStorage.getItem('dropzone_admin_products') || 'null') || [
+      { id: 1, name: "AirPod Pro Max Clone", category: "Tech", price: 89, icon: "ph-headphones", badge: "new" },
+      { id: 2, name: "Mechanical Keyboard RGB", category: "Tech", price: 129, icon: "ph-keyboard", badge: null },
+      { id: 3, name: "4K Webcam Pro", category: "Tech", price: 79, icon: "ph-camera", badge: "sale" },
+      { id: 4, name: "Portable SSD 2TB", category: "Tech", price: 149, icon: "ph-hard-drive", badge: "new" },
+      { id: 5, name: "Oversized Hoodie Drop", category: "Fashion", price: 75, icon: "ph-t-shirt", badge: "new" },
+      { id: 6, name: "Cargo Pants Wide Leg", category: "Fashion", price: 95, icon: "ph-t-shirt", badge: null },
+      { id: 7, name: "Puffer Jacket Y2K", category: "Fashion", price: 145, icon: "ph-coat", badge: "new" },
+      { id: 8, name: "Foam Runner Slides", category: "Sneakers", price: 85, icon: "ph-sneaker", badge: "new" },
+      { id: 9, name: "High Top Retro 90s", category: "Sneakers", price: 120, icon: "ph-sneaker", badge: null },
+      { id: 10, name: "Collab Limited Drop", category: "Sneakers", price: 250, icon: "ph-sparkle", badge: "new" },
+      { id: 11, name: "Pro Gaming Mouse", category: "Gaming", price: 79, icon: "ph-mouse", badge: "new" },
+      { id: 12, name: "RGB Headset 7.1", category: "Gaming", price: 99, icon: "ph-headphones", badge: null },
+      { id: 13, name: "Gaming Chair Racer", category: "Gaming", price: 299, icon: "ph-chair", badge: "sale" },
+      { id: 14, name: "Controller Pro Pad", category: "Gaming", price: 69, icon: "ph-game-controller", badge: null },
+    ];
+
+    const mockOrders = [
+      { id: '#DZ-0091', customer: 'Alex Kim', items: 3, amount: 287, date: 'Mar 25, 2026', status: 'confirmed' },
+      { id: '#DZ-0090', customer: 'Sarah M.', items: 1, amount: 129, date: 'Mar 25, 2026', status: 'shipped' },
+      { id: '#DZ-0089', customer: 'James O.', items: 2, amount: 174, date: 'Mar 24, 2026', status: 'pending' },
+      { id: '#DZ-0088', customer: 'Priya L.', items: 4, amount: 412, date: 'Mar 24, 2026', status: 'confirmed' },
+      { id: '#DZ-0087', customer: 'Marcus T.', items: 1, amount: 250, date: 'Mar 23, 2026', status: 'shipped' },
+    ];
+
+    // ── CHARTS ──
+    let charts = {};
+
+    function getChartColors() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      return {
+        grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+        text: isDark ? '#888' : '#666',
+        accent: '#c8f135',
+        accent2: '#ff3c3c',
+        accent3: '#3cf0ff',
+        orange: '#f5a623'
+      };
+    }
+
+    function initCharts() {
+      // Destroy existing charts
+      Object.values(charts).forEach(c => c.destroy());
+      charts = {};
+
+      const colors = getChartColors();
+
+      Chart.defaults.font.family = 'Space Grotesk';
+      Chart.defaults.color = colors.text;
+
+      // ── REVENUE CHART ──
+      const revenueCtx = document.getElementById('revenueChart');
+      if (revenueCtx) {
+        charts.revenue = new Chart(revenueCtx, {
+          type: 'line',
+          data: {
+            labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+            datasets: [{
+              label: 'Revenue ($)',
+              data: [22000, 28000, 35000, 29000, 41000, 48295],
+              borderColor: colors.accent,
+              backgroundColor: `${colors.accent}15`,
+              borderWidth: 2, fill: true,
+              tension: 0.4, pointRadius: 4,
+              pointBackgroundColor: colors.accent
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: colors.grid }, ticks: { color: colors.text } },
+              y: {
+                grid: { color: colors.grid }, ticks: { color: colors.text },
+                callback: v => `$${(v/1000).toFixed(0)}k`
+              }
+            }
+          }
+        });
+      }
+
+      // ── CATEGORY CHART ──
+      const catCtx = document.getElementById('categoryChart');
+      if (catCtx) {
+        charts.category = new Chart(catCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Tech', 'Fashion', 'Sneakers', 'Gaming'],
+            datasets: [{
+              data: [35, 28, 22, 15],
+              backgroundColor: [colors.accent, colors.accent3, colors.orange, colors.accent2],
+              borderWidth: 0, hoverOffset: 8
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+            },
+            cutout: '70%'
+          }
+        });
+      }
+
+      // ── TOP PRODUCTS ──
+      const topCtx = document.getElementById('topProductsChart');
+      if (topCtx) {
+        charts.topProducts = new Chart(topCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Collab Drop', 'Gaming Chair', 'SSD 2TB', 'Hoodie', 'Watch Ultra'],
+            datasets: [{
+              label: 'Sales',
+              data: [89, 76, 65, 58, 52],
+              backgroundColor: colors.accent,
+              borderRadius: 2
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: colors.text, font: { size: 10 } } },
+              y: { grid: { color: colors.grid }, ticks: { color: colors.text } }
+            }
+          }
+        });
+      }
+
+      // ── DAILY ORDERS ──
+      const dailyCtx = document.getElementById('dailyOrdersChart');
+      if (dailyCtx) {
+        charts.daily = new Chart(dailyCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+              label: 'Orders',
+              data: [42, 55, 38, 71, 89, 112, 67],
+              backgroundColor: colors.accent3,
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: colors.text } },
+              y: { grid: { color: colors.grid }, ticks: { color: colors.text } }
+            }
+          }
+        });
+      }
+
+      // ── TRAFFIC SOURCES ──
+      const trafficCtx = document.getElementById('trafficChart');
+      if (trafficCtx) {
+        charts.traffic = new Chart(trafficCtx, {
+          type: 'pie',
+          data: {
+            labels: ['Direct', 'Social', 'Search', 'Referral', 'Email'],
+            datasets: [{
+              data: [30, 25, 22, 15, 8],
+              backgroundColor: [colors.accent, colors.accent2, colors.accent3, colors.orange, '#9b59b6'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true } } }
+          }
+        });
+      }
+    }
+
+    // ── TABLES ──
+    function renderRecentOrders() {
+      document.getElementById('recentOrdersBody').innerHTML = mockOrders.slice(0, 5).map(o => `
+        <tr>
+          <td style="font-weight:600; font-size:0.8rem;">${o.id}</td>
+          <td>${o.customer}</td>
+          <td style="color:var(--accent); font-weight:700;">$${o.amount}</td>
+          <td><span class="status-badge ${o.status}">${o.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProductsTable() {
+      document.getElementById('productTableCount').textContent = `${adminProducts.length} products`;
+      document.getElementById('productCountMetric').textContent = adminProducts.length;
+      document.getElementById('productsTableBody').innerHTML = adminProducts.map(p => `
+        <tr>
+          <td><span style="margin-right:0.5rem"><i class="ph ${p.icon || 'ph-package'}"></i></span>${p.name}</td>
+          <td style="color:var(--muted)">${p.category}</td>
+          <td style="color:var(--accent); font-weight:700;">$${p.price}</td>
+          <td>${p.badge ? `<span class="status-badge ${p.badge === 'new' ? 'confirmed' : 'pending'}">${p.badge}</span>` : '—'}</td>
+          <td><button class="delete-btn" onclick="deleteProduct(${p.id})">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderOrdersTable() {
+      document.getElementById('allOrdersBody').innerHTML = mockOrders.map(o => `
+        <tr>
+          <td style="font-weight:600; font-size:0.8rem;">${o.id}</td>
+          <td>${o.customer}</td>
+          <td>${o.items} item${o.items > 1 ? 's' : ''}</td>
+          <td style="color:var(--accent); font-weight:700;">$${o.amount}</td>
+          <td style="color:var(--muted); font-size:0.8rem;">${o.date}</td>
+          <td><span class="status-badge ${o.status}">${o.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCustomersTable() {
+      const users = JSON.parse(localStorage.getItem('dropzone_users') || '[]');
+      const defaultCustomers = [
+        { name: 'Alex Kim', email: 'alex@example.com', createdAt: '2026-01-15', orders: 8 },
+        { name: 'Sarah M.', email: 'sarah@example.com', createdAt: '2026-02-03', orders: 5 },
+        { name: 'James O.', email: 'james@example.com', createdAt: '2026-02-20', orders: 3 },
+      ];
+      const allCustomers = [...defaultCustomers, ...users.map(u => ({ name: u.name, email: u.email, createdAt: u.createdAt?.split('T')[0], orders: 0 }))];
+      document.getElementById('customersBody').innerHTML = allCustomers.map(c => `
+        <tr>
+          <td style="font-weight:600;">${c.name}</td>
+          <td style="color:var(--muted)">${c.email}</td>
+          <td style="color:var(--muted); font-size:0.8rem;">${c.createdAt?.substring(0, 10) || 'N/A'}</td>
+          <td>${c.orders}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ── ADD PRODUCT ──
+    function addProduct() {
+      const name = document.getElementById('newName').value.trim();
+      const category = document.getElementById('newCategory').value;
+      const price = parseFloat(document.getElementById('newPrice').value);
+      const icon = document.getElementById('newEmoji').value.trim() || 'ph-package';
+      const badge = document.getElementById('newBadge').value || null;
+
+      if (!name || !price) {
+        alert('Product name and price are required!');
+        return;
+      }
+
+      adminProducts.push({ id: Date.now(), name, category, price, icon, badge });
+      localStorage.setItem('dropzone_admin_products', JSON.stringify(adminProducts));
+      renderProductsTable();
+
+      // Clear form
+      ['newName', 'newPrice', 'newEmoji'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('newBadge').value = '';
+    }
+
+    // ── DELETE PRODUCT ──
+    function deleteProduct(id) {
+      adminProducts = adminProducts.filter(p => p.id !== id);
+      localStorage.setItem('dropzone_admin_products', JSON.stringify(adminProducts));
+      renderProductsTable();
+    }
+
+    // ── INIT ──
+    initCharts();
+    renderRecentOrders();
+
+    // Mobile menu button
+    if (window.innerWidth <= 768) {
+      document.getElementById('menuBtn').style.display = 'flex';
+    }
+  </script>
+
+</body>
+</html>
