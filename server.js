@@ -16,18 +16,28 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // ── DATABASE (JSON file) ──
-const DB_FILE = path.join(__dirname, 'db.json');
+const IS_VERCEL = !!process.env.VERCEL;
+const BUNDLED_DB_FILE = path.join(__dirname, 'db.json');
+const DB_FILE = IS_VERCEL ? path.join('/tmp', 'db.json') : BUNDLED_DB_FILE;
 
 function readDB() {
   if (!fs.existsSync(DB_FILE)) {
-    const defaultDB = { products: [], users: [], orders: [] };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDB, null, 2));
+    if (IS_VERCEL && fs.existsSync(BUNDLED_DB_FILE)) {
+      fs.copyFileSync(BUNDLED_DB_FILE, DB_FILE);
+    } else {
+      const defaultDB = { products: [], users: [], orders: [] };
+      fs.writeFileSync(DB_FILE, JSON.stringify(defaultDB, null, 2));
+    }
   }
   return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
 }
 
 function writeDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('Failed to write to DB:', err);
+  }
 }
 
 // ── AUTH MIDDLEWARE ──

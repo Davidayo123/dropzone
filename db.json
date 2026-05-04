@@ -1,0 +1,68 @@
+{
+  "products": [],
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@dropzone.com",
+      "password": "admin123",
+      "role": "admin",
+      "token": "admin_u3tgxjxpjn1774564985681",
+      "createdAt": "2026-03-26T22:43:05.681Z"
+    },
+    {
+      "id": 1774565111124,
+      "name": "Test",
+      "email": "test@test.com",
+      "password": "testpass123",
+      "role": "admin",
+      "token": "cafz9n4t3pf1774565111124",
+      "createdAt": "2026-03-26T22:45:11.124Z"
+    },
+    {
+      "id": 1774565111130,
+      "name": "Testing",
+      "email": "ass@gmail.com",
+      "password": "testpass1234",
+      "role": "user",
+      "token": "cafz9n4t3pf1774565111151",
+      "createdAt": "2026-03-27T12:30:11.124Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-MNOFJ0L5",
+      "userId": 1774565111124,
+      "items": [
+        {
+          "id": 1,
+          "name": "AirPod Pro Max Clone",
+          "category": "Tech",
+          "price": 89,
+          "qty": 1,
+          "img": "images/headphones.png"
+        }
+      ],
+      "subtotal": 89,
+      "shipping": 0,
+      "tax": 0,
+      "total": 89,
+      "shippingAddress": {
+        "name": "John Doe",
+        "email": "test@test.com",
+        "phone": "+1 555 123 4567",
+        "address": "123 Test Street",
+        "city": "New York",
+        "state": "NY",
+        "zip": "10001",
+        "country": "US"
+      },
+      "paymentId": "pay_mjtuql74mnofj0l5",
+      "paymentMethod": "Visa ****4242",
+      "cardholderName": "JOHN DOE",
+      "status": "paid",
+      "createdAt": "2026-04-07T09:41:13.529Z",
+      "estimatedDelivery": "2026-04-14"
+    }
+  ]
+}
