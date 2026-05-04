@@ -13,7 +13,7 @@ const PORT = 3000;
 // ── MIDDLEWARE ──
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static(__dirname));
 
 // ── DATABASE (JSON file) ──
 const IS_VERCEL = !!process.env.VERCEL;
