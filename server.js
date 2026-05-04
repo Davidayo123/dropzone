@@ -401,7 +401,11 @@ app.post('/api/ai/recommend', (req, res) => {
 // ── START SERVER ──
 seedAdmin();
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`API ready at http://localhost:${PORT}/api`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`API ready at http://localhost:${PORT}/api`);
+  });
+}
+
+module.exports = app;
